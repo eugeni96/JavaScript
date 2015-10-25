@@ -2,12 +2,11 @@
  * Created by Eugen on 21.10.2015.
  */
 
-var Slider = function(sliderDiv, numOfItemsInWindow) {
+var Slider = function(sliderDiv, numOfItemsInWindow, slideTime) {
 
     var items = sliderDiv.querySelectorAll(".item");
 
     var itemWidth = items[0].clientWidth;
-    var windowWidth = itemWidth * numOfItemsInWindow;
 
     var numberOfItems = items.length;
 
@@ -19,7 +18,7 @@ var Slider = function(sliderDiv, numOfItemsInWindow) {
     var leftArrow = sliderDiv.querySelector('.leftArrow');
     var rightArrow = sliderDiv.querySelector('.rightArrow');
 
-    var animate = function(draw, duration) {
+    var animate = function(draw, duration, func) {
 
         var start = performance.now();
 
@@ -28,7 +27,8 @@ var Slider = function(sliderDiv, numOfItemsInWindow) {
             if (timePassed > duration)
                 timePassed = duration;
 
-            draw(timePassed);
+            var timeFraction = timePassed / duration;
+            draw(func(timeFraction));
 
             if (timePassed < duration) {
                 requestAnimationFrame(animateSlider);
@@ -36,59 +36,63 @@ var Slider = function(sliderDiv, numOfItemsInWindow) {
         });
     };
 
-    var moveLeft = function() {
+    var easeInOut = function (progress) {
+            return Math.cbrt(progress);
+    };
+
+    var moveWrapperLeft = function() {
         var i = startWindowIndex;
-        animate(function(timePassed) {
-            wrapper.style.left = - i * itemWidth - timePassed * 0.5 + "px";
-        }, 800);
+        animate(function(progress) {
+            wrapper.style.left = - i * itemWidth - progress * itemWidth + "px";
+        }, slideTime, easeInOut);
         startWindowIndex++;
     };
 
-    var moveRight = function() {
+    var moveCursorLeft = function(){
+        items[currentItemIndex].classList.remove('selected');
+        currentItemIndex--;
+        items[currentItemIndex].classList.add('selected');
+    };
+
+    var moveWrapperRight = function() {
         var i = startWindowIndex;
-        animate(function(timePassed) {
-            wrapper.style.left = - i * itemWidth + timePassed * 0.5 + "px";
-        }, 800);
+        animate(function(progress) {
+            wrapper.style.left = - i * itemWidth + progress * itemWidth + "px";
+        }, slideTime, easeInOut);
         startWindowIndex--;
     };
 
+    var moveCursorRight = function() {
+        items[currentItemIndex].classList.remove('selected');
+        currentItemIndex++;
+        items[currentItemIndex].classList.add('selected');
+    };
+
     var leftArrowOnClick = function () {
-        if(currentItemIndex > startWindowIndex)
-        {
-            items[currentItemIndex].classList.remove('selected');
-            currentItemIndex--;
-            items[currentItemIndex].classList.add('selected');
+        if(currentItemIndex > startWindowIndex) {
+            moveCursorLeft();
         }
-        else
-        {
+        else {
             if(startWindowIndex > 0) {
-                moveRight();
+                moveWrapperRight();
                 setTimeout(function () {
-                    items[currentItemIndex].classList.remove('selected');
-                    currentItemIndex--;
-                    items[currentItemIndex].classList.add('selected');
-                },800);
+                    moveCursorLeft();
+                },slideTime);
             }
         }
 
     };
 
     var rightArrowOnClock = function() {
-        if(currentItemIndex < startWindowIndex + numOfItemsInWindow -1)
-        {
-            items[currentItemIndex].classList.remove('selected');
-            currentItemIndex++;
-            items[currentItemIndex].classList.add('selected');
+        if(currentItemIndex < startWindowIndex + numOfItemsInWindow -1) {
+            moveCursorRight();
         }
-        else
-        {
+        else {
             if(startWindowIndex + numOfItemsInWindow < numberOfItems) {
-                moveLeft();
+                moveWrapperLeft();
                 setTimeout(function () {
-                    items[currentItemIndex].classList.remove('selected');
-                    currentItemIndex++;
-                    items[currentItemIndex].classList.add('selected');
-                }, 800);
+                    moveCursorRight();
+                }, slideTime);
             }
         }
 
@@ -99,7 +103,7 @@ var Slider = function(sliderDiv, numOfItemsInWindow) {
 
 };
 
-var slider = new Slider(document.querySelector('.slider'), 3);
+var slider = new Slider(document.querySelector('.slider'), 3, 1000);
 
 
 

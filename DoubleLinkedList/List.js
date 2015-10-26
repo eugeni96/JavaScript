@@ -4,8 +4,8 @@
 
 var Node = function(value) {
     this.value = value;
-    this.top = null;
-    this.bot = null;
+    this.prev = null;
+    this.next = null;
 };
 var DLL = function(){
 
@@ -46,8 +46,8 @@ DLL.prototype = {
             this.t = newNode;
         }
         else {
-            this.t.bot = newNode;
-            newNode.top = this.t;
+            this.t.next = newNode;
+            newNode.prev = this.t;
             this.t = newNode;
         }
         this.length++;
@@ -64,7 +64,7 @@ DLL.prototype = {
             var k = 0;
             var pointer = this.h;
             while(k < index){
-                pointer = pointer.bot;
+                pointer = pointer.next;
                 k++;
             }
             return pointer;
@@ -79,16 +79,16 @@ DLL.prototype = {
 
         if (pointer !== null) {
             if (isHead) {
-                this.h = pointer.bot;
+                this.h = pointer.next;
             }
             if (isTail) {
-                this.t = pointer.top;
+                this.t = pointer.prev;
             }
-            if (pointer.bot) {
-                pointer.bot.top = pointer.top;
+            if (pointer.next) {
+                pointer.next.prev = pointer.prev;
             }
-            if (pointer.top) {
-                pointer.top.bot = pointer.bot;
+            if (pointer.prev) {
+                pointer.prev.next = pointer.next;
             }
             this.length--;
 
@@ -97,17 +97,32 @@ DLL.prototype = {
         return null;
     },
 
+    reverse: function() {
+        var temp =  this.h;
+        this.h = this.t;
+        this.t = temp;
+        var p = this.h;
+        while(p!=null)
+        {
+            temp = p.next;
+            p.next = p.prev;
+            p.prev = temp;
+            p = p.next;
+        }
+        return this;
+    },
+
     insertAt: function(index, value) {
         var pointer = this.at(index);
 
         var newNode = new Node(value);
 
         if(pointer !== null) {
-            pointer.top = newNode;
-            newNode.bot = pointer;
-            if(pointer.top) {
-                pointer.top.bot = newNode;
-                newNode.top = pointer.top;
+            pointer.prev = newNode;
+            newNode.next = pointer;
+            if(pointer.prev) {
+                pointer.prev.next = newNode;
+                newNode.prev = pointer.prev;
             }
         }
     },
@@ -118,7 +133,7 @@ DLL.prototype = {
             if(pointer.value === value) {
                 return pointer;
             }
-            pointer = pointer.bot;
+            pointer = pointer.next;
         }
         return null;
     },
@@ -127,7 +142,7 @@ DLL.prototype = {
         var pointer = this.h;
         while(pointer){
             func(pointer);
-            pointer = pointer.bot;
+            pointer = pointer.next;
         }
         return this;
     }
@@ -137,4 +152,4 @@ DLL.prototype = {
 
 A = new DLL();
 
-A.append(3).append(6).append(5).deleteAt(2).at(0);
+A.append(3).append(6).append(5).reverse().deleteAt(2).at(0);
